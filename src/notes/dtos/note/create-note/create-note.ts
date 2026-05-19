@@ -1,7 +1,8 @@
-import { IsString, IsArray, IsBoolean, IsDateString } from 'class-validator';
+import { IsString, IsArray, IsBoolean, IsDateString, IsNotEmpty } from 'class-validator';
 
 export class CreateNoteDto {
   @IsString()
+  @IsNotEmpty()
   title!: string;
 
   @IsArray()
@@ -9,11 +10,14 @@ export class CreateNoteDto {
   tags!: string[];
 
   @IsString()
+  @IsNotEmpty()
   content!: string;
 
   @IsDateString()
+  @IsNotEmpty()
   lastEdited!: string;
 
   @IsBoolean()
+  @IsNotEmpty()
   isArchived!: boolean;
 }

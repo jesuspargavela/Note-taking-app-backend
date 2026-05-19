@@ -9,41 +9,41 @@ import {
   Put,
 } from '@nestjs/common';
 
-import { NoteDto } from '@/dtos/note/note/note';
-import { CreateNoteDto } from '@/dtos/note/create-note/create-note';
-import { UpdateNoteDto } from '@/dtos/note/update-note/update-note';
+import { CreateNoteDto } from '@/notes/dtos/note/create-note/create-note';
+import { UpdateNoteDto } from '@/notes/dtos/note/update-note/update-note';
 
 import { NotesService } from './notes.service';
 
+import { Note } from './notes.model';
+
 @Controller('notes')
 export class NotesController {
-  constructor(private readonly notesService: NotesService) {}
+  constructor(private readonly notesService: NotesService) { }
 
   @Get()
-  findAll(): NoteDto[] {
+  findAll(): Promise<Note[]> {
     return this.notesService.findAll();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string): NoteDto {
+  findOne(@Param('id') id: string): Promise<Note> {
     return this.notesService.findOne(id);
   }
 
   @Post()
-  @HttpCode(204)
-  create(@Body() createNoteDto: CreateNoteDto): void {
-    this.notesService.create(createNoteDto);
+  @HttpCode(201)
+  create(@Body() createNoteDto: CreateNoteDto): Promise<Note> {
+    return this.notesService.create(createNoteDto);
   }
 
   @Put(':id')
-  @HttpCode(204)
-  update(@Param('id') id: string, @Body() updateNoteDto: UpdateNoteDto): void {
+  update(@Param('id') id: string, @Body() updateNoteDto: UpdateNoteDto): Promise<Note> {
     return this.notesService.update(id, updateNoteDto);
   }
 
   @Delete(':id')
   @HttpCode(204)
-  delete(@Param('id') id: string): void {
-    this.notesService.delete(id);
+  delete(@Param('id') id: string): Promise<void> {
+    return this.notesService.delete(id);
   }
 }

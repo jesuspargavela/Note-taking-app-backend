@@ -2,14 +2,16 @@
 /* eslint-disable @typescript-eslint/no-unsafe-return */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/sequelize';
 
-import { NoteDto } from '@/dtos/note/note/note';
-import { CreateNoteDto } from '@/dtos/note/create-note/create-note';
-import { UpdateNoteDto } from '@/dtos/note/update-note/update-note';
+import { Note } from './notes.model';
+
+import { CreateNoteDto } from '@/notes/dtos/note/create-note/create-note';
+import { UpdateNoteDto } from '@/notes/dtos/note/update-note/update-note';
 
 @Injectable()
 export class NotesService {
-  private notes: NoteDto[] = [
+  /* private notes: NoteDto[] = [
     {
       id: crypto.randomUUID(),
       title: 'React Performance Optimization',
@@ -100,46 +102,41 @@ export class NotesService {
       lastEdited: '2024-09-22T07:30:00Z',
       isArchived: false,
     },
-  ];
+  ]; */
 
-  findAll(): NoteDto[] {
-    return this.notes;
+  constructor(@InjectModel(Note) private noteModel: typeof Note) { }
+
+  async findAll(): Promise<Note[]> {
+    return await this.noteModel.findAll();
   }
 
-  findOne(id: string): NoteDto {
-    const noteFound = this.notes.find((note: NoteDto) => note.id === id);
-
-    if (!noteFound) {
-      throw new NotFoundException('The note with id ' + id + ' was not found');
-    }
-
-    return noteFound;
+  async findOne(id: string): Promise<Note> {
+    const note = await this.noteModel.findByPk(id);
+    if (!note) throw new NotFoundException('Note with id: ' + id + ' not found');
+    return note;
   }
 
-  create(createNoteDto: CreateNoteDto): void {
-    const newNote: NoteDto = {
-      id: crypto.randomUUID(),
+  async create(createNoteDto: CreateNoteDto): Promise<Note> {
+    return this.noteModel.create({
       ...createNoteDto,
-    };
-
-    this.notes.push(newNote);
-  }
-
-  update(id: string, updateNoteDto: UpdateNoteDto): void {
-    const noteFound = this.notes.find((note: NoteDto) => note.id === id);
-
-    if (!noteFound) {
-      throw new NotFoundException('The note with id ' + id + ' was not found');
-    }
-
-    this.notes = this.notes.map((note: NoteDto) => {
-      if (note.id === id) {
-        return { ...noteFound, ...updateNoteDto };
-      } else return note;
+      lastEdited: new Date(createNoteDto.lastEdited),
     });
   }
 
-  delete(id: string): void {
-    this.notes = this.notes.filter((note: NoteDto) => note.id !== id);
+  async update(id: string, updateNoteDto: UpdateNoteDto): Promise<Note> {
+    const note = await this.noteModel.findByPk(id);
+    if (!note) throw new NotFoundException('Note with id: ' + id + ' not found');
+    return note.update({
+      ...updateNoteDto,
+      lastEdited: updateNoteDto.lastEdited
+        ? new Date(updateNoteDto.lastEdited)
+        : note.lastEdited,
+    });
+  }
+
+  async delete(id: string): Promise<void> {
+    const note = await this.noteModel.findByPk(id);
+    if (!note) throw new NotFoundException('Note with id: ' + id + ' not found');
+    await note.destroy();
   }
 }
